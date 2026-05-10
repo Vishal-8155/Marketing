@@ -23,6 +23,8 @@
       --radius-sm: 10px;
       --sidebar-w: 260px;
       --header-h: 60px;
+      /* Space for fixed site header (padding + row + safe area) — keep in sync with .site-header */
+      --main-area-pad-top: calc(20px + var(--header-h) + env(safe-area-inset-top, 0px));
       --danger: #dc2626;
       --danger-hover: #b91c1c;
     }
@@ -175,6 +177,7 @@
       max-width: 100%;
       overflow-x: hidden;
       box-sizing: border-box;
+      padding-top: var(--main-area-pad-top);
       padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
     }
 
@@ -187,10 +190,12 @@
       }
     }
 
-    /* Header — sticky bar, solid brand blue */
+    /* Header — fixed to viewport (sticky breaks when ancestors use overflow-x: hidden) */
     .site-header {
-      position: sticky;
+      position: fixed;
       top: 0;
+      left: 0;
+      right: 0;
       z-index: 100;
       display: flex;
       align-items: center;
@@ -207,6 +212,12 @@
       background: var(--accent);
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    }
+
+    @media (min-width: 900px) {
+      .site-header {
+        left: var(--sidebar-w);
+      }
     }
 
     .site-header .page-title-wrap h1 {
