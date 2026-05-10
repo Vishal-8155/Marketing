@@ -1,0 +1,8 @@
+{
+  "name": "outreach-marketing",
+  "private": true,
+  "description": "Static site + Netlify Function for MongoDB",
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  }
+}

@@ -1230,22 +1230,193 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         <p style="margin-top:10px;">Ship something small your niche can use; distribute everywhere.</p>
       </div>
 
-      <p class="footer-note">Leads and message logs are saved automatically in this browser and stay after refresh. Avoid private/incognito mode, and open the site from the same URL (e.g. your GitHub Pages link). Clearing site data will remove them.</p>
+      <p class="footer-note">On Netlify with <code>MONGODB_URL</code> set, data is stored in MongoDB. Otherwise it uses this browser (local storage). Avoid private mode if you rely on local storage.</p>
     </section>
   </div>
 
   <script>
 (function () {
+  /**
+   * Cloud data (pick one):
+   *
+   * 1) NETLIFY + MongoDB (recommended): Deploy this repo to Netlify. Set env var MONGODB_URL in
+   *    Netlify to your Atlas connection string. The browser calls /.netlify/functions/outreach —
+   *    the URI never appears in HTML or in the client.
+   *
+   * 2) Atlas Data API: set MONGO.enabled and apiKey/endpoint below (key is visible in source).
+   *
+   * NEVER paste mongodb+srv://… into this file.
+   */
+  var NETLIFY_DB = {
+    path: "/.netlify/functions/outreach",
+    tryAuto: true
+  };
+
+  var __netlifyOk = false;
+
+  var MONGO = {
+    enabled: false,
+    endpoint: "https://data.mongodb-api.com/app/YOUR_APP_ID/endpoint/data/v1/action/",
+    apiKey: "YOUR_DATA_API_KEY",
+    dataSource: "Cluster0",
+    database: "outreach",
+    collectionLeads: "leads",
+    collectionActivity: "activity"
+  };
+
   var STORAGE_LEADS = "outreachLeads_v1";
   var STORAGE_LEADS_BAK = "outreachLeads_v1_bak";
   var STORAGE_ACTIVITY = "outreachActivity_v1";
   var STORAGE_ACTIVITY_BAK = "outreachActivity_v1_bak";
+
+  var __leadsCache = [];
+  var __activityCache = [];
 
   var chartStatus = null;
   var chartActivity = null;
 
   function $(id) {
     return document.getElementById(id);
+  }
+
+  function mongoEnabled() {
+    if (!MONGO.enabled) return false;
+    if (!MONGO.apiKey || MONGO.apiKey.indexOf("YOUR_") === 0) return false;
+    if (!MONGO.endpoint || MONGO.endpoint.indexOf("YOUR_") !== -1) return false;
+    return MONGO.endpoint.indexOf("http") === 0;
+  }
+
+  function mongoAction(action, payload) {
+    var body = Object.assign(
+      {
+        dataSource: MONGO.dataSource,
+        database: MONGO.database
+      },
+      payload
+    );
+    var url = MONGO.endpoint.replace(/\/?$/, "/") + action;
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": MONGO.apiKey
+      },
+      body: JSON.stringify(body)
+    }).then(function (res) {
+      return res.json().then(function (data) {
+        if (!res.ok) {
+          var msg =
+            (data && (data.error || data.error_message || data.detail)) ||
+            (typeof data === "string" ? data : JSON.stringify(data)) ||
+            res.statusText;
+          throw new Error(String(msg));
+        }
+        return data;
+      });
+    });
+  }
+
+  function refreshFromMongo() {
+    if (!mongoEnabled()) return Promise.resolve();
+    return mongoAction("find", {
+      collection: MONGO.collectionLeads,
+      filter: {},
+      limit: 1000
+    }).then(function (data) {
+      __leadsCache = data.documents || [];
+      return mongoAction("find", {
+        collection: MONGO.collectionActivity,
+        filter: {},
+        limit: 1000
+      });
+    }).then(function (data) {
+      __activityCache = data.documents || [];
+    });
+  }
+
+  function stripMongoId(doc) {
+    var o = {};
+    Object.keys(doc).forEach(function (k) {
+      if (k !== "_id") o[k] = doc[k];
+    });
+    return o;
+  }
+
+  function mongoReplaceCollection(collection, documents) {
+    return mongoAction("deleteMany", {
+      collection: collection,
+      filter: {}
+    }).then(function () {
+      if (!documents.length) return null;
+      var docs = documents.map(function (d) {
+        return stripMongoId(d);
+      });
+      return mongoAction("insertMany", {
+        collection: collection,
+        documents: docs
+      });
+    });
+  }
+
+  function netlifyDbActive() {
+    return __netlifyOk === true;
+  }
+
+  function probeAndLoadNetlify() {
+    if (!NETLIFY_DB.tryAuto) return Promise.reject(new Error("skip"));
+    return fetch(NETLIFY_DB.path + "?c=leads", { method: "GET" })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          if (!r.ok) {
+            throw new Error((data && data.error) || r.statusText || "Netlify function error");
+          }
+          __leadsCache = data.documents || [];
+        });
+      })
+      .then(function () {
+        return fetch(NETLIFY_DB.path + "?c=activity", { method: "GET" });
+      })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          if (!r.ok) {
+            throw new Error((data && data.error) || r.statusText || "Netlify function error");
+          }
+          __activityCache = data.documents || [];
+          __netlifyOk = true;
+        });
+      });
+  }
+
+  function refreshFromNetlify() {
+    return fetch(NETLIFY_DB.path + "?c=leads", { method: "GET" })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          if (!r.ok) throw new Error((data && data.error) || r.statusText);
+          __leadsCache = data.documents || [];
+        });
+      })
+      .then(function () {
+        return fetch(NETLIFY_DB.path + "?c=activity", { method: "GET" });
+      })
+      .then(function (r) {
+        return r.json().then(function (data) {
+          if (!r.ok) throw new Error((data && data.error) || r.statusText);
+          __activityCache = data.documents || [];
+        });
+      });
+  }
+
+  function netlifyReplaceCollection(collection, documents) {
+    return fetch(NETLIFY_DB.path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ collection: collection, documents: documents })
+    }).then(function (r) {
+      return r.json().then(function (data) {
+        if (!r.ok) throw new Error((data && data.error) || r.statusText);
+        return data;
+      });
+    });
   }
 
   function canUseLocalStorage() {
@@ -1265,7 +1436,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return Array.isArray(data) ? data : null;
   }
 
-  function loadLeads() {
+  function loadLeadsLocal() {
     try {
       var primary = localStorage.getItem(STORAGE_LEADS);
       var parsed = parseJsonArray(primary);
@@ -1284,7 +1455,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return [];
   }
 
-  function saveLeads(arr) {
+  function saveLeadsLocal(arr) {
     var json = JSON.stringify(arr);
     try {
       localStorage.setItem(STORAGE_LEADS, json);
@@ -1298,7 +1469,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     }
   }
 
-  function loadActivity() {
+  function loadActivityLocal() {
     try {
       var primary = localStorage.getItem(STORAGE_ACTIVITY);
       var parsed = parseJsonArray(primary);
@@ -1317,7 +1488,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return [];
   }
 
-  function saveActivity(arr) {
+  function saveActivityLocal(arr) {
     var json = JSON.stringify(arr);
     try {
       localStorage.setItem(STORAGE_ACTIVITY, json);
@@ -1329,6 +1500,56 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         true
       );
     }
+  }
+
+  function loadLeads() {
+    if (netlifyDbActive()) return __leadsCache;
+    if (mongoEnabled()) return __leadsCache;
+    return loadLeadsLocal();
+  }
+
+  function loadActivity() {
+    if (netlifyDbActive()) return __activityCache;
+    if (mongoEnabled()) return __activityCache;
+    return loadActivityLocal();
+  }
+
+  function saveLeads(arr) {
+    if (netlifyDbActive()) {
+      return netlifyReplaceCollection("leads", arr).then(function () {
+        __leadsCache = arr.map(function (x) {
+          return Object.assign({}, x);
+        });
+      });
+    }
+    if (mongoEnabled()) {
+      return mongoReplaceCollection(MONGO.collectionLeads, arr).then(function () {
+        __leadsCache = arr.map(function (x) {
+          return Object.assign({}, x);
+        });
+      });
+    }
+    saveLeadsLocal(arr);
+    return Promise.resolve();
+  }
+
+  function saveActivity(arr) {
+    if (netlifyDbActive()) {
+      return netlifyReplaceCollection("activity", arr).then(function () {
+        __activityCache = arr.map(function (x) {
+          return Object.assign({}, x);
+        });
+      });
+    }
+    if (mongoEnabled()) {
+      return mongoReplaceCollection(MONGO.collectionActivity, arr).then(function () {
+        __activityCache = arr.map(function (x) {
+          return Object.assign({}, x);
+        });
+      });
+    }
+    saveActivityLocal(arr);
+    return Promise.resolve();
   }
 
   function showStorageBanner(html, isError) {
@@ -1348,6 +1569,30 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
   }
 
   function reloadAllFromStorage() {
+    if (netlifyDbActive()) {
+      refreshFromNetlify()
+        .then(function () {
+          renderLeads();
+          renderActivity();
+          refreshDashboard();
+        })
+        .catch(function (e) {
+          console.warn("Netlify DB refresh failed", e);
+        });
+      return;
+    }
+    if (mongoEnabled()) {
+      refreshFromMongo()
+        .then(function () {
+          renderLeads();
+          renderActivity();
+          refreshDashboard();
+        })
+        .catch(function (e) {
+          console.warn("Mongo refresh failed", e);
+        });
+      return;
+    }
     renderLeads();
     renderActivity();
     refreshDashboard();
@@ -1535,11 +1780,18 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       });
       tr.querySelector(".btn-danger").addEventListener("click", function () {
         if (confirm("Delete this lead?")) {
-          saveLeads(leads.filter(function (l) {
-            return l.id !== lead.id;
-          }));
-          renderLeads();
-          refreshDashboard();
+          saveLeads(
+            loadLeads().filter(function (l) {
+              return l.id !== lead.id;
+            })
+          )
+            .then(function () {
+              renderLeads();
+              refreshDashboard();
+            })
+            .catch(function (err) {
+              alert("Could not delete: " + err.message);
+            });
         }
       });
       tbody.appendChild(tr);
@@ -1583,7 +1835,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
   }
 
   function renderActivity() {
-    var rows = loadActivity().sort(function (a, b) {
+    var rows = loadActivity().slice().sort(function (a, b) {
       return (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
     });
     var tbody = $("activityTableBody");
@@ -1641,9 +1893,14 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
             loadActivity().filter(function (x) {
               return x.id !== entry.id;
             })
-          );
-          renderActivity();
-          refreshDashboard();
+          )
+            .then(function () {
+              renderActivity();
+              refreshDashboard();
+            })
+            .catch(function (err) {
+              alert("Could not delete: " + err.message);
+            });
         }
       });
       tbody.appendChild(tr);
@@ -1884,10 +2141,15 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     } else {
       leads.push(payload);
     }
-    saveLeads(leads);
-    resetLeadForm();
-    renderLeads();
-    refreshDashboard();
+    saveLeads(leads)
+      .then(function () {
+        resetLeadForm();
+        renderLeads();
+        refreshDashboard();
+      })
+      .catch(function (err) {
+        alert("Could not save lead: " + err.message);
+      });
   });
 
   $("leadCancelEdit").addEventListener("click", resetLeadForm);
@@ -1955,10 +2217,15 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       }
       rows.push(payload);
     }
-    saveActivity(rows);
-    resetActivityForm();
-    renderActivity();
-    refreshDashboard();
+    saveActivity(rows)
+      .then(function () {
+        resetActivityForm();
+        renderActivity();
+        refreshDashboard();
+      })
+      .catch(function (err) {
+        alert("Could not save log: " + err.message);
+      });
   });
 
   $("activityCancelEdit").addEventListener("click", resetActivityForm);
@@ -2014,6 +2281,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
   }
 
   window.addEventListener("storage", function (e) {
+    if (netlifyDbActive() || mongoEnabled()) return;
     if (!e.key) return;
     if (
       e.key === STORAGE_LEADS ||
@@ -2031,23 +2299,72 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     }
   });
 
-  /* Init */
-  if (!canUseLocalStorage()) {
-    showStorageBanner(
-      "<strong>Storage unavailable</strong>This browser blocked local storage, so data cannot be kept after refresh. Use a normal (non-private) window or another browser.",
-      true
-    );
-  } else if (location.protocol === "file:") {
-    showStorageBanner(
-      "<strong>Tip: open from a website URL</strong>For the most reliable saving after refresh, use your GitHub Pages link or a local dev server — not a double-clicked file. Some browsers limit storage for <code>file://</code>."
-    );
+  function finishInit() {
+    setActivityDateMin();
+    renderLeads();
+    renderActivity();
+    refreshDashboard();
+    showView("dashboard");
   }
 
-  setActivityDateMin();
-  renderLeads();
-  renderActivity();
-  refreshDashboard();
-  showView("dashboard");
+  function finishInitAfterLocalChecks() {
+    if (!netlifyDbActive() && !mongoEnabled()) {
+      if (!canUseLocalStorage()) {
+        showStorageBanner(
+          "<strong>Storage unavailable</strong>This browser blocked local storage, so data cannot be kept after refresh. Use a normal (non-private) window or another browser.",
+          true
+        );
+      } else if (location.protocol === "file:") {
+        showStorageBanner(
+          "<strong>Tip: open from a website URL</strong>For the most reliable saving after refresh, use your GitHub Pages link or a local dev server — not a double-clicked file. Some browsers limit storage for <code>file://</code>."
+        );
+      }
+    }
+    finishInit();
+  }
+
+  function tryMongoOrFallback() {
+    if (mongoEnabled()) {
+      showStorageBanner(
+        "<strong>MongoDB Data API</strong>Leads and logs sync to Atlas. Your API key is visible in this file — restrict it in Atlas. Prefer Netlify + MONGODB_URL when possible."
+      );
+      refreshFromMongo()
+        .then(function () {
+          finishInit();
+        })
+        .catch(function (e) {
+          showStorageBanner(
+            "<strong>MongoDB connection failed</strong>" +
+              escapeHtml(String(e.message)) +
+              " — Check App ID URL, API key, data source name, CORS origins, and network.",
+            true
+          );
+          finishInitAfterLocalChecks();
+        });
+      return;
+    }
+    finishInitAfterLocalChecks();
+  }
+
+  function initApp() {
+    if (NETLIFY_DB.tryAuto) {
+      probeAndLoadNetlify()
+        .then(function () {
+          showStorageBanner(
+            "<strong>Netlify + MongoDB</strong>Data is stored in Atlas. Your URI is only in Netlify environment variables (<code>MONGODB_URL</code>), not in this page."
+          );
+          finishInit();
+        })
+        .catch(function () {
+          __netlifyOk = false;
+          tryMongoOrFallback();
+        });
+      return;
+    }
+    tryMongoOrFallback();
+  }
+
+  initApp();
 })();
   </script>
 </body>
