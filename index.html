@@ -1,0 +1,2020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outreach CRM — Playbook &amp; Leads</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f1f3f5;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #1e3a5f;
+      --accent-hover: #152a45;
+      --pill-bg: #e8ecf1;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --sidebar-w: 260px;
+      --header-h: 60px;
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* —— App layout —— */
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      z-index: 180;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .sidebar-backdrop.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: min(var(--sidebar-w), 88vw);
+      height: 100vh;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      z-index: 200;
+      padding: calc(var(--header-h) + 12px) 0 24px;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      overflow-y: auto;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    @media (min-width: 900px) {
+      .sidebar {
+        transform: translateX(0);
+        padding-top: 24px;
+      }
+      .sidebar-backdrop {
+        display: none !important;
+      }
+    }
+
+    .sidebar-brand {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-brand strong {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .sidebar-brand span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-link:hover {
+      background: #f8fafc;
+      color: var(--text);
+    }
+
+    .nav-link.active {
+      background: rgba(30, 58, 95, 0.08);
+      color: var(--accent);
+      border-right: 3px solid var(--accent);
+    }
+
+    .main-area {
+      flex: 1;
+      min-width: 0;
+      padding-bottom: 48px;
+    }
+
+    @media (min-width: 900px) {
+      .main-area {
+        margin-left: var(--sidebar-w);
+      }
+    }
+
+    /* Header */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: var(--header-h);
+      padding: 10px clamp(12px, 3vw, 28px);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 900px) {
+      .menu-btn {
+        display: none;
+      }
+    }
+
+    .menu-btn span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--text);
+      position: relative;
+    }
+
+    .menu-btn span::before,
+    .menu-btn span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      width: 18px;
+      height: 2px;
+      background: var(--text);
+    }
+
+    .menu-btn span::before { top: -6px; }
+    .menu-btn span::after { top: 6px; }
+
+    .page-title-wrap h1 {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page-title-wrap p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    @media (min-width: 480px) {
+      .page-title-wrap p {
+        display: block;
+      }
+    }
+
+    .header-pill {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      background: rgba(30, 58, 95, 0.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: clamp(16px, 3vw, 28px) clamp(12px, 3vw, 32px) 0;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .page-head {
+      margin-bottom: 20px;
+    }
+
+    .page-head h2 {
+      font-size: clamp(1.35rem, 4vw, 1.85rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .page-head p {
+      color: var(--text-muted);
+      font-size: clamp(0.88rem, 2.5vw, 0.95rem);
+      max-width: 60ch;
+    }
+
+    /* Cards & stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 640px) {
+      .stats {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .stat-card label {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-card .num {
+      font-size: clamp(1.25rem, 3.5vw, 1.5rem);
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-card .sub {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: clamp(16px, 3vw, 22px);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+    }
+
+    .card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-head h3 {
+      font-size: clamp(1rem, 2.5vw, 1.12rem);
+      font-weight: 700;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .form-grid.cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .field label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.88rem;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .field textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(30, 58, 95, 0.12);
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-hover); }
+
+    .btn-ghost {
+      background: var(--pill-bg);
+      color: var(--text);
+    }
+
+    .btn-ghost:hover { background: #dde3eb; }
+
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger:hover { background: var(--danger-hover); }
+
+    .btn-sm {
+      padding: 7px 12px;
+      font-size: 0.78rem;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* Charts */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .chart-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .chart-card h4 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .chart-box {
+      position: relative;
+      height: 240px;
+    }
+
+    .empty-hint {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 -2px;
+      border-radius: var(--radius-sm);
+    }
+
+    table.data-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .data-table th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .data-table tbody tr:hover {
+      background: #fafbfc;
+    }
+
+    .status-pill {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+    }
+
+    .status-interested { background: #d1fae5; color: #065f46; }
+    .status-responded { background: #dbeafe; color: #1e40af; }
+    .status-new { background: #fef3c7; color: #92400e; }
+    .status-booked { background: #e0e7ff; color: #3730a3; }
+    .status-notnow { background: #f1f5f9; color: #475569; }
+    .status-closed { background: #fee2e2; color: #991b1b; }
+
+    .table-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    @media (max-width: 700px) {
+      table.data-table.leads-table {
+        min-width: 0;
+      }
+
+      .leads-table thead {
+        display: none;
+      }
+
+      .leads-table tr {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+        background: var(--surface);
+      }
+
+      .leads-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .leads-table td:last-child {
+        border-bottom: none;
+      }
+
+      .leads-table td::before {
+        content: attr(data-label);
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        max-width: 38%;
+      }
+    }
+
+    /* Activity table — wide columns scroll on tablet */
+    table.data-table.activity-table {
+      min-width: 600px;
+    }
+
+    @media (max-width: 640px) {
+      .activity-table thead {
+        display: none;
+      }
+
+      .activity-table tr {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 12px;
+        background: var(--surface);
+      }
+
+      .activity-table td {
+        display: block;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.78rem;
+      }
+
+      .activity-table td:last-child {
+        border-bottom: none;
+      }
+
+      .activity-table td::before {
+        display: block;
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        content: attr(data-label);
+      }
+    }
+
+    /* Social rows in form */
+    .social-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    @media (min-width: 520px) {
+      .social-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 900px) {
+      .social-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .social-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .social-field label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .social-field input {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+    }
+
+    .custom-social-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-end;
+      margin-top: 8px;
+    }
+
+    .custom-social-row input[type="text"] {
+      flex: 1;
+      min-width: 120px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+
+    .custom-social-row input[type="text"].num-only {
+      max-width: 100px;
+    }
+
+    /* Playbook legacy blocks */
+    .goal-banner {
+      padding: clamp(14px, 3vw, 20px) clamp(16px, 3vw, 22px);
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .goal-banner strong {
+      font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+      color: var(--accent);
+    }
+
+    .goal-banner p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .platform-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .platform-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .platform-card {
+      margin-bottom: 0;
+    }
+
+    .platform-card p,
+    .platform-card ul {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .platform-card ul {
+      margin: 8px 0 0 1.1rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .badge {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+    }
+
+    .badge.accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .metric-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 12px;
+      margin: 10px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-block {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.7rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, monospace;
+      color: #334155;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag {
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--pill-bg);
+    }
+
+    .template-card {
+      border-left: 4px solid var(--accent);
+    }
+
+    .template-body {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      color: #334155;
+    }
+
+    .template-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .copy-toast {
+      font-size: 0.78rem;
+      color: #059669;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .copy-toast.show {
+      opacity: 1;
+    }
+
+    table.schedule {
+      width: 100%;
+      min-width: 280px;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .schedule th,
+    .schedule td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .schedule th {
+      background: #f8fafc;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 560px) {
+      .schedule thead {
+        display: none;
+      }
+
+      .schedule tr {
+        display: block;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 10px;
+        background: var(--surface);
+      }
+
+      .schedule td {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .schedule td:last-child {
+        border-bottom: none;
+      }
+
+      .schedule td::before {
+        content: attr(data-label);
+        font-size: 0.62rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        max-width: 42%;
+      }
+    }
+
+    .power-move {
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
+      color: #f1f5f9;
+      border: none;
+    }
+
+    .power-move h3 {
+      color: #fff;
+      font-size: clamp(1.05rem, 3vw, 1.25rem);
+    }
+
+    .power-move p,
+    .power-move li {
+      color: rgba(241, 245, 249, 0.9);
+      font-size: 0.85rem;
+    }
+
+    .power-move ul {
+      margin: 10px 0 0 1.1rem;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 28px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <strong>Outreach CRM</strong>
+      <span>Search → real reply → save lead</span>
+    </div>
+    <nav>
+      <button type="button" class="nav-link active" data-view="dashboard">Dashboard</button>
+      <button type="button" class="nav-link" data-view="leads">Responded leads</button>
+      <button type="button" class="nav-link" data-view="activity">Daily messages</button>
+      <button type="button" class="nav-link" data-view="playbook">Playbook</button>
+    </nav>
+  </aside>
+
+  <div class="main-area">
+    <header class="site-header">
+      <div class="header-left">
+        <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu">
+          <span></span>
+        </button>
+        <div class="page-title-wrap">
+          <h1 id="headerTitle">Dashboard</h1>
+          <p id="headerSub">Leads, interest, and outreach volume</p>
+        </div>
+      </div>
+      <span class="header-pill" id="headerPill">Overview</span>
+    </header>
+
+    <!-- Dashboard -->
+    <section class="view active wrap" id="view-dashboard" aria-labelledby="dash-heading">
+      <div class="page-head">
+        <h2 id="dash-heading">Dashboard</h2>
+        <p>Track how many people responded, who is interested, and how many messages you send per channel.</p>
+      </div>
+
+      <div class="stats" id="dashStats">
+        <div class="stat-card">
+          <label>Total leads</label>
+          <div class="num" id="statTotalLeads">0</div>
+          <div class="sub">saved after real replies</div>
+        </div>
+        <div class="stat-card">
+          <label>Interested</label>
+          <div class="num" id="statInterested">0</div>
+          <div class="sub">status = interested</div>
+        </div>
+        <div class="stat-card">
+          <label>Calls booked</label>
+          <div class="num" id="statBooked">0</div>
+          <div class="sub">ready to talk</div>
+        </div>
+        <div class="stat-card">
+          <label>Messages logged</label>
+          <div class="num" id="statMsgTotal">0</div>
+          <div class="sub">all channels (sum)</div>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-card">
+          <h4>Leads by status</h4>
+          <div class="chart-box">
+            <canvas id="chartStatus"></canvas>
+          </div>
+          <p class="empty-hint" id="chartStatusEmpty" style="display:none;">Add leads in “Responded leads” to see this chart.</p>
+        </div>
+        <div class="chart-card">
+          <h4>Outreach volume by day</h4>
+          <div class="chart-box">
+            <canvas id="chartActivity"></canvas>
+          </div>
+          <p class="empty-hint" id="chartActivityEmpty" style="display:none;">Log days in “Daily messages” to see trends.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Leads -->
+    <section class="view wrap" id="view-leads" aria-labelledby="leads-heading">
+      <div class="page-head">
+        <h2 id="leads-heading">Responded leads</h2>
+        <p>When someone gives you a genuine reply, add them here — name, company, what they need, and links.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3 id="leadFormTitle">Add lead</h3>
+        </div>
+        <form id="leadForm">
+          <input type="hidden" id="leadEditId" value="" />
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label for="leadName">Name</label>
+              <input type="text" id="leadName" required autocomplete="name" />
+            </div>
+            <div class="field">
+              <label for="leadEmail">Email</label>
+              <input type="email" id="leadEmail" autocomplete="email" />
+            </div>
+            <div class="field">
+              <label for="leadMobile">Mobile</label>
+              <input type="text" id="leadMobile" inputmode="numeric" pattern="[0-9]*" placeholder="Digits only" />
+            </div>
+            <div class="field">
+              <label for="leadCompany">Company</label>
+              <input type="text" id="leadCompany" autocomplete="organization" />
+            </div>
+            <div class="field">
+              <label for="leadPosition">Position</label>
+              <input type="text" id="leadPosition" autocomplete="organization-title" />
+            </div>
+            <div class="field">
+              <label for="leadStatus">Status</label>
+              <select id="leadStatus">
+                <option value="New">New</option>
+                <option value="Responded">Responded</option>
+                <option value="Interested">Interested</option>
+                <option value="Call booked">Call booked</option>
+                <option value="Not now">Not now</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label for="leadWant">What they want</label>
+              <textarea id="leadWant" placeholder="e.g. AI automation for inventory, landing page, etc."></textarea>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label for="leadUrl">Portfolio / profile URL</label>
+              <input type="url" id="leadUrl" placeholder="https://..." />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="leadSubmitBtn">Save lead</button>
+            <button type="button" class="btn btn-ghost" id="leadCancelEdit" style="display:none;">Cancel edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Your list</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table leads-table" id="leadTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Company</th>
+                <th>Position</th>
+                <th>What they want</th>
+                <th>Status</th>
+                <th>URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leadTableBody"></tbody>
+          </table>
+        </div>
+        <p class="empty-hint" id="leadEmpty" style="display:none;">No leads yet — add someone who actually replied.</p>
+      </div>
+    </section>
+
+    <!-- Activity -->
+    <section class="view wrap" id="view-activity" aria-labelledby="act-heading">
+      <div class="page-head">
+        <h2 id="act-heading">Daily messages</h2>
+        <p>Log how many people you messaged per channel. Date cannot be in the past.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3 id="activityFormTitle">Log a day</h3>
+        </div>
+        <form id="activityForm">
+          <input type="hidden" id="activityEditId" value="" />
+          <div class="form-grid cols-2">
+            <div class="field">
+              <label for="actDate">Date</label>
+              <input type="date" id="actDate" required />
+            </div>
+            <div class="field">
+              <label for="actDay">Day</label>
+              <select id="actDay">
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+                <option>Sunday</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="actWhatsapp">WhatsApp leads (count)</label>
+              <input type="text" id="actWhatsapp" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="0" />
+            </div>
+          </div>
+
+          <p class="section-label" style="margin-top:16px;">Social &amp; channels (message count)</p>
+          <div class="social-grid" id="socialGrid">
+            <div class="social-field">
+              <label for="soc_linkedin">LinkedIn</label>
+              <input type="text" class="soc-input" id="soc_linkedin" data-platform="LinkedIn" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_twitter">Twitter / X</label>
+              <input type="text" class="soc-input" id="soc_twitter" data-platform="Twitter / X" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_reddit">Reddit</label>
+              <input type="text" class="soc-input" id="soc_reddit" data-platform="Reddit" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_facebook">Facebook</label>
+              <input type="text" class="soc-input" id="soc_facebook" data-platform="Facebook" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_instagram">Instagram</label>
+              <input type="text" class="soc-input" id="soc_instagram" data-platform="Instagram" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_telegram">Telegram</label>
+              <input type="text" class="soc-input" id="soc_telegram" data-platform="Telegram" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+            <div class="social-field">
+              <label for="soc_email">Email</label>
+              <input type="text" class="soc-input" id="soc_email" data-platform="Email" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
+            </div>
+          </div>
+
+          <div id="customSocialMount"></div>
+          <button type="button" class="btn btn-outline btn-sm" id="addCustomSocial" style="margin-top:12px;">+ Add platform</button>
+
+          <div class="form-actions" style="margin-top:16px;">
+            <button type="submit" class="btn btn-primary" id="activitySubmitBtn">Save log</button>
+            <button type="button" class="btn btn-ghost" id="activityCancelEdit" style="display:none;">Cancel edit</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>Message log</h3>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table activity-table" id="activityTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>WhatsApp</th>
+                <th>LinkedIn</th>
+                <th>Twitter</th>
+                <th>Reddit</th>
+                <th>Facebook</th>
+                <th>IG</th>
+                <th>TG</th>
+                <th>Email</th>
+                <th>Other</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="activityTableBody"></tbody>
+          </table>
+        </div>
+        <p class="empty-hint" id="activityEmpty" style="display:none;">No logs yet — add your first day.</p>
+      </div>
+    </section>
+
+    <!-- Playbook -->
+    <section class="view wrap" id="view-playbook">
+      <div class="page-head">
+        <h2>Daily visibility system</h2>
+        <p>Show your service to 100+ people every day, for free — structured across five platforms and one repeatable message.</p>
+      </div>
+
+      <div class="goal-banner">
+        <strong>Your goal</strong>
+        <p>Reach 100–400 real people per day with genuine comments, connections, and DMs — not spam.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card"><label>Daily target</label><div class="num">100+</div><div class="sub">people touched</div></div>
+        <div class="stat-card"><label>Platforms</label><div class="num">5</div><div class="sub">+ power move</div></div>
+        <div class="stat-card"><label>Budget</label><div class="num">$0</div><div class="sub">organic only</div></div>
+        <div class="stat-card"><label>Reach band</label><div class="num">100–400</div><div class="sub">real contacts / day</div></div>
+      </div>
+
+      <p class="section-label">Platforms</p>
+      <div class="platform-grid">
+        <article class="card platform-card">
+          <div class="card-head"><h3>LinkedIn</h3><div class="badges"><span class="badge accent">Premium</span><span class="badge">B2B</span></div></div>
+          <div class="metric-row"><span style="font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Focus</span><span style="font-size:1.4rem;font-weight:700;">20–30</span><span style="font-size:0.85rem;color:var(--text-muted);font-weight:600;">comments / day</span></div>
+          <p><strong>Don’t blast DMs.</strong> Comment with insight; connect 10–15; message after accept.</p>
+          <p class="section-label" style="margin-top:12px;">LinkedIn search</p>
+          <div class="code-block" id="linkedinSearch">(CEO OR Founder OR "Managing Director") AND 
+(healthcare OR ecommerce OR sports) AND 
+("11-50 employees" OR "small team")</div>
+          <button type="button" class="btn btn-ghost" style="margin-top:10px;" onclick="copyText('linkedinSearch', this)">Copy search string</button>
+        </article>
+        <article class="card platform-card">
+          <div class="card-head"><h3>Twitter / X</h3><div class="badges"><span class="badge">DMs</span></div></div>
+          <div class="metric-row"><span style="font-size:0.65rem;font-weight:700;color:var(--text-muted);">Daily DMs</span><span style="font-size:1.5rem;font-weight:700;">20–30</span></div>
+          <p>Hashtags, value replies, then DMs.</p>
+          <div class="tag-list">
+            <span class="tag">#healthcaretech</span><span class="tag">#ecommercetips</span><span class="tag">#sportstech</span><span class="tag">#startupfounder</span>
+          </div>
+        </article>
+        <article class="card platform-card">
+          <div class="card-head"><h3>Reddit</h3></div>
+          <p>r/startups · r/entrepreneur · r/ecommerce · r/healthIT · r/smallbusiness</p>
+        </article>
+        <article class="card platform-card">
+          <div class="card-head"><h3>Facebook groups</h3></div>
+          <p>Healthcare / ecommerce / SMB / founder groups — one strong post can drive many profile views.</p>
+        </article>
+        <article class="card platform-card" style="grid-column:1/-1;">
+          <div class="card-head"><h3>WhatsApp &amp; Telegram</h3></div>
+          <p>Join 5–10 groups; share value; DM engaged people.</p>
+        </article>
+      </div>
+
+      <p class="section-label">Message template</p>
+      <div class="card template-card">
+        <div class="card-head">
+          <h3>Message that gets replies</h3>
+          <div class="template-actions">
+            <button type="button" class="btn btn-primary" onclick="copyMessageTemplate()">Copy</button>
+            <span class="copy-toast" id="copyToast">Copied</span>
+          </div>
+        </div>
+        <div class="template-body" id="messageTemplate">Hi [Name],
+
+I saw your work at [Company] — really interesting what you're building in [healthcare/ecommerce/sports].
+
+I'm a Fullstack + AI/ML developer. I help small companies like yours build [specific thing — AI automation / custom web app / data dashboard].
+
+Would you be open to a free 15-min call? No pitch — just want to understand your tech challenges and share one idea that might help.
+
+— [Your Name]</div>
+      </div>
+
+      <p class="section-label">Schedule</p>
+      <div class="card">
+        <div class="table-wrap">
+          <table class="schedule">
+            <thead><tr><th>Time</th><th>Action</th><th>Reach</th></tr></thead>
+            <tbody>
+              <tr><td data-label="Time">9–10am</td><td data-label="Action">20 LinkedIn comments</td><td data-label="Reach">~200 views</td></tr>
+              <tr><td data-label="Time">10–11am</td><td data-label="Action">15 connections</td><td data-label="Reach">15 contacts</td></tr>
+              <tr><td data-label="Time">11–12pm</td><td data-label="Action">20 Twitter replies</td><td data-label="Reach">~100 impressions</td></tr>
+              <tr><td data-label="Time">2–3pm</td><td data-label="Action">3 group posts</td><td data-label="Reach">50–100 views</td></tr>
+              <tr><td data-label="Time">3–4pm</td><td data-label="Action">20 DMs</td><td data-label="Reach">20 contacts</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card power-move">
+        <p class="section-label" style="color:rgba(255,255,255,0.6);">Power move</p>
+        <h3>One mini-tool → Product Hunt, Reddit, LinkedIn, Indie Hackers</h3>
+        <p style="margin-top:10px;">Ship something small your niche can use; distribute everywhere.</p>
+      </div>
+
+      <p class="footer-note">Data stays in this browser (local storage) until you clear site data.</p>
+    </section>
+  </div>
+
+  <script>
+(function () {
+  var STORAGE_LEADS = "outreachLeads_v1";
+  var STORAGE_ACTIVITY = "outreachActivity_v1";
+
+  var chartStatus = null;
+  var chartActivity = null;
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function loadLeads() {
+    try {
+      var raw = localStorage.getItem(STORAGE_LEADS);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveLeads(arr) {
+    localStorage.setItem(STORAGE_LEADS, JSON.stringify(arr));
+  }
+
+  function loadActivity() {
+    try {
+      var raw = localStorage.getItem(STORAGE_ACTIVITY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveActivity(arr) {
+    localStorage.setItem(STORAGE_ACTIVITY, JSON.stringify(arr));
+  }
+
+  function onlyDigits(str) {
+    return String(str || "").replace(/\D/g, "");
+  }
+
+  function parseNonNegInt(str) {
+    var n = parseInt(onlyDigits(str), 10);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function todayISO() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, "0");
+    var day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function dayNameFromISO(iso) {
+    var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    var dt = new Date(iso + "T12:00:00");
+    return days[dt.getDay()];
+  }
+
+  function statusClass(status) {
+    var s = (status || "").toLowerCase();
+    if (s === "interested") return "status-interested";
+    if (s === "responded") return "status-responded";
+    if (s === "new") return "status-new";
+    if (s === "call booked") return "status-booked";
+    if (s === "not now") return "status-notnow";
+    if (s === "closed") return "status-closed";
+    return "";
+  }
+
+  function getDefaultSocialCounts() {
+    return {
+      "LinkedIn": 0,
+      "Twitter / X": 0,
+      Reddit: 0,
+      Facebook: 0,
+      Instagram: 0,
+      Telegram: 0,
+      Email: 0
+    };
+  }
+
+  function collectSocialFromForm() {
+    var base = getDefaultSocialCounts();
+    var customs = [];
+    document.querySelectorAll(".soc-input").forEach(function (inp) {
+      var key = inp.getAttribute("data-platform");
+      base[key] = parseNonNegInt(inp.value);
+    });
+    document.querySelectorAll(".custom-soc-row").forEach(function (row) {
+      var nameInp = row.querySelector(".custom-soc-name");
+      var numInp = row.querySelector(".custom-soc-num");
+      var name = (nameInp && nameInp.value.trim()) || "";
+      if (name) {
+        customs.push({ name: name, count: parseNonNegInt(numInp && numInp.value) });
+      }
+    });
+    return { base: base, customs: customs };
+  }
+
+  function setSocialFormDefaults() {
+    document.querySelectorAll(".soc-input").forEach(function (inp) {
+      inp.value = "0";
+    });
+    $("customSocialMount").innerHTML = "";
+  }
+
+  function applySocialToForm(base, customs) {
+    setSocialFormDefaults();
+    Object.keys(base).forEach(function (k) {
+      var el = document.querySelector('.soc-input[data-platform="' + k.replace(/"/g, '\\"') + '"]');
+      if (el) el.value = String(base[k] || 0);
+    });
+    (customs || []).forEach(function (c) {
+      addCustomSocialRow(c.name, c.count);
+    });
+  }
+
+  function addCustomSocialRow(name, count) {
+    var mount = $("customSocialMount");
+    var row = document.createElement("div");
+    row.className = "custom-social-row custom-soc-row";
+    row.innerHTML =
+      '<input type="text" class="custom-soc-name" placeholder="Platform name" value="' +
+      (name ? escapeAttr(name) : "") +
+      '" />' +
+      '<input type="text" class="custom-soc-num num-only" inputmode="numeric" pattern="[0-9]*" placeholder="0" value="' +
+      (count != null ? String(count) : "0") +
+      '" />' +
+      '<button type="button" class="btn btn-danger btn-sm remove-custom">Remove</button>';
+    mount.appendChild(row);
+    row.querySelector(".remove-custom").addEventListener("click", function () {
+      row.remove();
+    });
+    row.querySelector(".custom-soc-num").addEventListener("input", function () {
+      this.value = onlyDigits(this.value);
+    });
+  }
+
+  function escapeAttr(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;");
+  }
+
+  function activityRowTotals(entry) {
+    var b = entry.socialBase || getDefaultSocialCounts();
+    var t = parseNonNegInt(entry.whatsapp);
+    Object.keys(b).forEach(function (k) {
+      t += parseNonNegInt(b[k]);
+    });
+    (entry.socialCustom || []).forEach(function (c) {
+      t += parseNonNegInt(c.count);
+    });
+    return t;
+  }
+
+  function formatOther(entry) {
+    var parts = (entry.socialCustom || []).map(function (c) {
+      return c.name + ": " + c.count;
+    });
+    return parts.length ? parts.join("; ") : "—";
+  }
+
+  function renderLeads() {
+    var leads = loadLeads();
+    var tbody = $("leadTableBody");
+    tbody.innerHTML = "";
+    $("leadEmpty").style.display = leads.length ? "none" : "block";
+    $("leadTable").style.display = leads.length ? "" : "none";
+
+    leads.forEach(function (lead) {
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td data-label="Name">' +
+        escapeHtml(lead.name) +
+        "</td>" +
+        '<td data-label="Email">' +
+        escapeHtml(lead.email || "—") +
+        "</td>" +
+        '<td data-label="Mobile">' +
+        escapeHtml(lead.mobile || "—") +
+        "</td>" +
+        '<td data-label="Company">' +
+        escapeHtml(lead.company || "—") +
+        "</td>" +
+        '<td data-label="Position">' +
+        escapeHtml(lead.position || "—") +
+        "</td>" +
+        '<td data-label="Want">' +
+        escapeHtml(lead.want || "—") +
+        "</td>" +
+        '<td data-label="Status"><span class="status-pill ' +
+        statusClass(lead.status) +
+        '">' +
+        escapeHtml(lead.status || "") +
+        "</span></td>" +
+        '<td data-label="URL">' +
+        (lead.url
+          ? '<a href="' +
+            escapeAttr(lead.url) +
+            '" target="_blank" rel="noopener">Link</a>'
+          : "—") +
+        "</td>" +
+        '<td data-label="Actions"><div class="table-actions">' +
+        '<button type="button" class="btn btn-outline btn-sm" data-id="' +
+        escapeAttr(lead.id) +
+        '">Edit</button>' +
+        '<button type="button" class="btn btn-danger btn-sm" data-id="' +
+        escapeAttr(lead.id) +
+        '">Delete</button></div></td>';
+
+      tr.querySelector(".btn-outline").addEventListener("click", function () {
+        startEditLead(lead.id);
+      });
+      tr.querySelector(".btn-danger").addEventListener("click", function () {
+        if (confirm("Delete this lead?")) {
+          saveLeads(leads.filter(function (l) {
+            return l.id !== lead.id;
+          }));
+          renderLeads();
+          refreshDashboard();
+        }
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function startEditLead(id) {
+    var leads = loadLeads();
+    var lead = leads.find(function (l) {
+      return l.id === id;
+    });
+    if (!lead) return;
+    $("leadEditId").value = lead.id;
+    $("leadName").value = lead.name || "";
+    $("leadEmail").value = lead.email || "";
+    $("leadMobile").value = lead.mobile || "";
+    $("leadCompany").value = lead.company || "";
+    $("leadPosition").value = lead.position || "";
+    $("leadWant").value = lead.want || "";
+    $("leadStatus").value = lead.status || "New";
+    $("leadUrl").value = lead.url || "";
+    $("leadFormTitle").textContent = "Edit lead";
+    $("leadSubmitBtn").textContent = "Update lead";
+    $("leadCancelEdit").style.display = "";
+    window.scrollTo({ top: $("view-leads").offsetTop - 20, behavior: "smooth" });
+  }
+
+  function resetLeadForm() {
+    $("leadForm").reset();
+    $("leadEditId").value = "";
+    $("leadFormTitle").textContent = "Add lead";
+    $("leadSubmitBtn").textContent = "Save lead";
+    $("leadCancelEdit").style.display = "none";
+  }
+
+  function renderActivity() {
+    var rows = loadActivity().sort(function (a, b) {
+      return (a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+    });
+    var tbody = $("activityTableBody");
+    tbody.innerHTML = "";
+    $("activityEmpty").style.display = rows.length ? "none" : "block";
+    $("activityTable").style.display = rows.length ? "" : "none";
+
+    var keys = ["LinkedIn", "Twitter / X", "Reddit", "Facebook", "Instagram", "Telegram", "Email"];
+
+    rows.forEach(function (entry) {
+      var b = entry.socialBase || getDefaultSocialCounts();
+      var total = activityRowTotals(entry);
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td data-label="Date">' +
+        escapeHtml(entry.date) +
+        "</td>" +
+        '<td data-label="Day">' +
+        escapeHtml(entry.day) +
+        "</td>" +
+        '<td data-label="WhatsApp">' +
+        parseNonNegInt(entry.whatsapp) +
+        "</td>" +
+        keys
+          .map(function (k) {
+            return (
+              '<td data-label="' +
+              k.replace(/"/g, "") +
+              '">' +
+              parseNonNegInt(b[k]) +
+              "</td>"
+            );
+          })
+          .join("") +
+        '<td data-label="Other">' +
+        escapeHtml(formatOther(entry)) +
+        "</td>" +
+        '<td data-label="Total"><strong>' +
+        total +
+        "</strong></td>" +
+        '<td data-label="Actions"><div class="table-actions">' +
+        '<button type="button" class="btn btn-outline btn-sm act-edit" data-id="' +
+        escapeAttr(entry.id) +
+        '">Edit</button>' +
+        '<button type="button" class="btn btn-danger btn-sm act-del" data-id="' +
+        escapeAttr(entry.id) +
+        '">Delete</button></div></td>';
+
+      tr.querySelector(".act-edit").addEventListener("click", function () {
+        startEditActivity(entry.id);
+      });
+      tr.querySelector(".act-del").addEventListener("click", function () {
+        if (confirm("Delete this log?")) {
+          saveActivity(
+            loadActivity().filter(function (x) {
+              return x.id !== entry.id;
+            })
+          );
+          renderActivity();
+          refreshDashboard();
+        }
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function startEditActivity(id) {
+    var rows = loadActivity();
+    var entry = rows.find(function (r) {
+      return r.id === id;
+    });
+    if (!entry) return;
+    clearActivityDateMinForEdit();
+    $("activityEditId").value = entry.id;
+    $("actDate").value = entry.date;
+    $("actDay").value = entry.day;
+    $("actWhatsapp").value = String(parseNonNegInt(entry.whatsapp));
+    applySocialToForm(entry.socialBase || getDefaultSocialCounts(), entry.socialCustom || []);
+    $("activityFormTitle").textContent = "Edit log";
+    $("activitySubmitBtn").textContent = "Update log";
+    $("activityCancelEdit").style.display = "";
+    window.scrollTo({ top: $("view-activity").offsetTop - 20, behavior: "smooth" });
+  }
+
+  function resetActivityForm() {
+    $("activityForm").reset();
+    $("activityEditId").value = "";
+    setActivityDateMin();
+    $("actWhatsapp").value = "0";
+    setSocialFormDefaults();
+    $("activityFormTitle").textContent = "Log a day";
+    $("activitySubmitBtn").textContent = "Save log";
+    $("activityCancelEdit").style.display = "none";
+  }
+
+  function setActivityDateMin() {
+    var inp = $("actDate");
+    var t = todayISO();
+    inp.setAttribute("min", t);
+    if (!inp.value || inp.value < t) {
+      inp.value = t;
+    }
+    $("actDay").value = dayNameFromISO(inp.value);
+  }
+
+  function clearActivityDateMinForEdit() {
+    $("actDate").removeAttribute("min");
+  }
+
+  function sumMessageLogs() {
+    return loadActivity().reduce(function (acc, entry) {
+      return acc + activityRowTotals(entry);
+    }, 0);
+  }
+
+  function refreshDashboard() {
+    var leads = loadLeads();
+    var interested = leads.filter(function (l) {
+      return (l.status || "").toLowerCase() === "interested";
+    }).length;
+    var booked = leads.filter(function (l) {
+      return (l.status || "").toLowerCase() === "call booked";
+    }).length;
+
+    $("statTotalLeads").textContent = String(leads.length);
+    $("statInterested").textContent = String(interested);
+    $("statBooked").textContent = String(booked);
+    $("statMsgTotal").textContent = String(sumMessageLogs());
+
+    var statusCounts = {};
+    leads.forEach(function (l) {
+      var s = l.status || "Unknown";
+      statusCounts[s] = (statusCounts[s] || 0) + 1;
+    });
+
+    var labels = Object.keys(statusCounts);
+    var data = labels.map(function (k) {
+      return statusCounts[k];
+    });
+
+    $("chartStatusEmpty").style.display = labels.length ? "none" : "block";
+    $("chartStatus").parentElement.style.display = labels.length ? "block" : "none";
+
+    var actRows = loadActivity().slice().sort(function (a, b) {
+      return a.date.localeCompare(b.date);
+    });
+    var last7preview = actRows.slice(-14);
+    var hasActChart = last7preview.length > 0;
+    $("chartActivityEmpty").style.display = hasActChart ? "none" : "block";
+    $("chartActivity").parentElement.style.display = hasActChart ? "block" : "none";
+
+    var ctxS = $("chartStatus");
+    var ctxA = $("chartActivity");
+
+    if (chartStatus) {
+      chartStatus.destroy();
+      chartStatus = null;
+    }
+    if (chartActivity) {
+      chartActivity.destroy();
+      chartActivity = null;
+    }
+
+    if (labels.length) {
+      chartStatus = new Chart(ctxS, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              data: data,
+              backgroundColor: [
+                "#1e3a5f",
+                "#3b82f6",
+                "#10b981",
+                "#f59e0b",
+                "#8b5cf6",
+                "#64748b",
+                "#ef4444"
+              ]
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    }
+
+    var dLabels = last7preview.map(function (x) {
+      return x.date;
+    });
+    var dTotals = last7preview.map(function (x) {
+      return activityRowTotals(x);
+    });
+
+    if (last7preview.length) {
+      chartActivity = new Chart(ctxA, {
+        type: "bar",
+        data: {
+          labels: dLabels,
+          datasets: [
+            {
+              label: "Total messages",
+              data: dTotals,
+              backgroundColor: "rgba(30, 58, 95, 0.75)",
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { ticks: { maxRotation: 45, minRotation: 0 } }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+  }
+
+  /* Navigation */
+  var titles = {
+    dashboard: { title: "Dashboard", sub: "Leads, interest, outreach volume", pill: "Overview" },
+    leads: { title: "Responded leads", sub: "Save people who actually replied", pill: "CRM" },
+    activity: { title: "Daily messages", sub: "Log counts per channel", pill: "Activity" },
+    playbook: { title: "Playbook", sub: "Strategy & templates", pill: "Guide" }
+  };
+
+  function showView(name) {
+    document.querySelectorAll(".view").forEach(function (v) {
+      v.classList.toggle("active", v.id === "view-" + name);
+    });
+    document.querySelectorAll(".nav-link").forEach(function (btn) {
+      btn.classList.toggle("active", btn.getAttribute("data-view") === name);
+    });
+    var meta = titles[name] || titles.dashboard;
+    $("headerTitle").textContent = meta.title;
+    $("headerSub").textContent = meta.sub;
+    $("headerPill").textContent = meta.pill;
+    if (name === "dashboard") {
+      refreshDashboard();
+    }
+    closeSidebar();
+  }
+
+  function openSidebar() {
+    $("sidebar").classList.add("open");
+    $("sidebarBackdrop").classList.add("visible");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeSidebar() {
+    $("sidebar").classList.remove("open");
+    $("sidebarBackdrop").classList.remove("visible");
+    document.body.style.overflow = "";
+  }
+
+  document.querySelectorAll(".nav-link").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      showView(btn.getAttribute("data-view"));
+    });
+  });
+
+  $("menuBtn").addEventListener("click", function () {
+    if ($("sidebar").classList.contains("open")) closeSidebar();
+    else openSidebar();
+  });
+
+  $("sidebarBackdrop").addEventListener("click", closeSidebar);
+
+  /* Lead form */
+  $("leadForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var leads = loadLeads();
+    var id = $("leadEditId").value;
+    var payload = {
+      id: id || "l_" + Date.now(),
+      name: $("leadName").value.trim(),
+      email: $("leadEmail").value.trim(),
+      mobile: onlyDigits($("leadMobile").value),
+      company: $("leadCompany").value.trim(),
+      position: $("leadPosition").value.trim(),
+      want: $("leadWant").value.trim(),
+      status: $("leadStatus").value,
+      url: $("leadUrl").value.trim()
+    };
+    if (!payload.name) return;
+
+    if (id) {
+      leads = leads.map(function (l) {
+        return l.id === id ? payload : l;
+      });
+    } else {
+      leads.push(payload);
+    }
+    saveLeads(leads);
+    resetLeadForm();
+    renderLeads();
+    refreshDashboard();
+  });
+
+  $("leadCancelEdit").addEventListener("click", resetLeadForm);
+
+  $("leadMobile").addEventListener("input", function () {
+    this.value = onlyDigits(this.value);
+  });
+
+  /* Activity form */
+  $("actDate").addEventListener("change", function () {
+    var v = this.value;
+    var min = this.getAttribute("min");
+    if (min && v && v < min) {
+      this.value = min;
+      v = min;
+    }
+    if (v) $("actDay").value = dayNameFromISO(v);
+  });
+
+  document.querySelectorAll(".soc-input").forEach(function (inp) {
+    inp.addEventListener("input", function () {
+      this.value = onlyDigits(this.value);
+    });
+  });
+
+  $("actWhatsapp").addEventListener("input", function () {
+    this.value = onlyDigits(this.value);
+  });
+
+  $("addCustomSocial").addEventListener("click", function () {
+    addCustomSocialRow("", 0);
+  });
+
+  $("activityForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var dateVal = $("actDate").value;
+    var minD = $("actDate").getAttribute("min");
+    var editingAct = !!$("activityEditId").value;
+    if (!editingAct && minD && dateVal < minD) {
+      alert("Pick today or a future date.");
+      return;
+    }
+    var soc = collectSocialFromForm();
+    var rows = loadActivity();
+    var editId = $("activityEditId").value;
+    var payload = {
+      id: editId || "a_" + Date.now(),
+      date: dateVal,
+      day: $("actDay").value,
+      whatsapp: parseNonNegInt($("actWhatsapp").value),
+      socialBase: soc.base,
+      socialCustom: soc.customs
+    };
+
+    if (editId) {
+      rows = rows.map(function (r) {
+        return r.id === editId ? payload : r;
+      });
+    } else {
+      var dup = rows.some(function (r) {
+        return r.date === payload.date;
+      });
+      if (dup && !confirm("You already have a log for this date. Add another row anyway?")) {
+        return;
+      }
+      rows.push(payload);
+    }
+    saveActivity(rows);
+    resetActivityForm();
+    renderActivity();
+    refreshDashboard();
+  });
+
+  $("activityCancelEdit").addEventListener("click", resetActivityForm);
+
+  /* Copy helpers */
+  window.copyMessageTemplate = function () {
+    var el = $("messageTemplate");
+    var text = el.textContent || el.innerText;
+    var toast = $("copyToast");
+    function show() {
+      toast.classList.add("show");
+      setTimeout(function () {
+        toast.classList.remove("show");
+      }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(show).catch(function () {
+        fallbackCopy(text, show);
+      });
+    } else fallbackCopy(text, show);
+  };
+
+  window.copyText = function (elementId, btn) {
+    var el = document.getElementById(elementId);
+    var text = el.textContent || el.innerText;
+    function flash() {
+      var p = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(function () {
+        btn.textContent = p;
+      }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(flash).catch(function () {
+        fallbackCopy(text, flash);
+      });
+    } else fallbackCopy(text, flash);
+  };
+
+  function fallbackCopy(text, done) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      if (done) done();
+    } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  /* Init */
+  setActivityDateMin();
+  renderLeads();
+  renderActivity();
+  refreshDashboard();
+  showView("dashboard");
+})();
+  </script>
+</body>
+</html>
