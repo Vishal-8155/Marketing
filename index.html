@@ -174,12 +174,16 @@
       width: 100%;
       max-width: 100%;
       overflow-x: hidden;
+      box-sizing: border-box;
       padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
     }
 
     @media (min-width: 900px) {
       .main-area {
         margin-left: var(--sidebar-w);
+        /* 100% + margin-left was wider than the viewport — fit remaining width */
+        width: calc(100% - var(--sidebar-w));
+        max-width: calc(100% - var(--sidebar-w));
       }
     }
 
@@ -191,9 +195,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px 12px;
+      flex-wrap: nowrap;
+      gap: 8px 10px;
       min-height: var(--header-h);
+      max-width: 100%;
+      box-sizing: border-box;
       padding: 10px clamp(12px, 3vw, 28px);
       padding-top: calc(10px + env(safe-area-inset-top, 0px));
       padding-left: calc(clamp(12px, 3vw, 28px) + env(safe-area-inset-left, 0px));
@@ -209,6 +215,7 @@
       align-items: center;
       gap: 10px;
       min-width: 0;
+      flex: 1 1 auto;
     }
 
     .menu-btn {
@@ -272,9 +279,14 @@
       font-size: 0.72rem;
       color: var(--text-muted);
       display: none;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
     }
 
-    @media (min-width: 480px) {
+    @media (min-width: 640px) {
       .page-title-wrap p {
         display: block;
       }
@@ -285,29 +297,35 @@
         white-space: normal;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
     }
 
     .header-pill {
-      font-size: 0.65rem;
+      font-size: clamp(0.58rem, 2vw, 0.65rem);
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
       color: var(--accent);
       background: rgba(30, 58, 95, 0.08);
-      padding: 6px 10px;
+      padding: 5px 9px;
       border-radius: 999px;
-      flex-shrink: 0;
-      max-width: 100%;
+      flex: 0 1 auto;
+      max-width: min(120px, 32vw);
       text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-left: 8px;
     }
 
-    @media (max-width: 360px) {
+    @media (min-width: 480px) {
       .header-pill {
-        width: 100%;
-        order: 3;
+        max-width: none;
+        padding: 6px 12px;
       }
     }
 
@@ -347,7 +365,9 @@
     .page-head p {
       color: var(--text-muted);
       font-size: clamp(0.88rem, 2.5vw, 0.95rem);
-      max-width: 60ch;
+      max-width: min(60ch, 100%);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     /* Cards & stats — minmax(0,1fr) prevents grid blowout past viewport */
@@ -781,6 +801,9 @@
       border: 1px solid var(--border);
       box-shadow: var(--shadow);
       margin-bottom: 20px;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
     }
 
     .goal-banner strong {
@@ -796,8 +819,10 @@
 
     .platform-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: 14px;
+      width: 100%;
+      min-width: 0;
     }
 
     @media (min-width: 640px) {
@@ -2261,6 +2286,15 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         }
       });
     }
+
+    requestAnimationFrame(function () {
+      if (chartStatus && typeof chartStatus.resize === "function") {
+        chartStatus.resize();
+      }
+      if (chartActivity && typeof chartActivity.resize === "function") {
+        chartActivity.resize();
+      }
+    });
   }
 
   /* Navigation */
