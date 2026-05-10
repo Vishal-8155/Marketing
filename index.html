@@ -1253,6 +1253,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
   };
 
   var __netlifyOk = false;
+  var __netlifyProbeFailed = false;
 
   var MONGO = {
     enabled: false,
@@ -1362,61 +1363,74 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return __netlifyOk === true;
   }
 
+  function netlifyFnUrl() {
+    try {
+      return new URL(NETLIFY_DB.path, window.location.origin).href;
+    } catch (e) {
+      return NETLIFY_DB.path;
+    }
+  }
+
+  function netlifyParseResponse(r) {
+    return r.text().then(function (text) {
+      var data = {};
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch (e2) {
+          if (!r.ok) {
+            throw new Error(r.status + " " + (text.slice(0, 200) || r.statusText));
+          }
+          throw new Error("Bad response from function");
+        }
+      }
+      if (!r.ok) {
+        var msg = [data.error, data.hint].filter(Boolean).join(" ");
+        throw new Error(msg.trim() || r.statusText || String(r.status));
+      }
+      return data;
+    });
+  }
+
   function probeAndLoadNetlify() {
     if (!NETLIFY_DB.tryAuto) return Promise.reject(new Error("skip"));
-    return fetch(NETLIFY_DB.path + "?c=leads", { method: "GET" })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          if (!r.ok) {
-            throw new Error((data && data.error) || r.statusText || "Netlify function error");
-          }
-          __leadsCache = data.documents || [];
-        });
-      })
-      .then(function () {
-        return fetch(NETLIFY_DB.path + "?c=activity", { method: "GET" });
-      })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          if (!r.ok) {
-            throw new Error((data && data.error) || r.statusText || "Netlify function error");
-          }
-          __activityCache = data.documents || [];
-          __netlifyOk = true;
-        });
-      });
+    var base = netlifyFnUrl();
+    return Promise.all([
+      fetch(base + "?c=leads", { method: "GET", credentials: "same-origin" }).then(
+        netlifyParseResponse
+      ),
+      fetch(base + "?c=activity", { method: "GET", credentials: "same-origin" }).then(
+        netlifyParseResponse
+      )
+    ]).then(function (results) {
+      __leadsCache = results[0].documents || [];
+      __activityCache = results[1].documents || [];
+      __netlifyOk = true;
+    });
   }
 
   function refreshFromNetlify() {
-    return fetch(NETLIFY_DB.path + "?c=leads", { method: "GET" })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          if (!r.ok) throw new Error((data && data.error) || r.statusText);
-          __leadsCache = data.documents || [];
-        });
-      })
-      .then(function () {
-        return fetch(NETLIFY_DB.path + "?c=activity", { method: "GET" });
-      })
-      .then(function (r) {
-        return r.json().then(function (data) {
-          if (!r.ok) throw new Error((data && data.error) || r.statusText);
-          __activityCache = data.documents || [];
-        });
-      });
+    var base = netlifyFnUrl();
+    return Promise.all([
+      fetch(base + "?c=leads", { method: "GET", credentials: "same-origin" }).then(
+        netlifyParseResponse
+      ),
+      fetch(base + "?c=activity", { method: "GET", credentials: "same-origin" }).then(
+        netlifyParseResponse
+      )
+    ]).then(function (results) {
+      __leadsCache = results[0].documents || [];
+      __activityCache = results[1].documents || [];
+    });
   }
 
   function netlifyReplaceCollection(collection, documents) {
-    return fetch(NETLIFY_DB.path, {
+    return fetch(netlifyFnUrl(), {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ collection: collection, documents: documents })
-    }).then(function (r) {
-      return r.json().then(function (data) {
-        if (!r.ok) throw new Error((data && data.error) || r.statusText);
-        return data;
-      });
-    });
+    }).then(netlifyParseResponse);
   }
 
   function canUseLocalStorage() {
@@ -2148,7 +2162,11 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         refreshDashboard();
       })
       .catch(function (err) {
-        alert("Could not save lead: " + err.message);
+        var m = err && err.message ? err.message : String(err);
+        if (netlifyDbActive()) {
+          showStorageBanner("<strong>Save failed (MongoDB)</strong>" + escapeHtml(m), true);
+        }
+        alert("Could not save lead: " + m);
       });
   });
 
@@ -2224,7 +2242,11 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         refreshDashboard();
       })
       .catch(function (err) {
-        alert("Could not save log: " + err.message);
+        var m = err && err.message ? err.message : String(err);
+        if (netlifyDbActive()) {
+          showStorageBanner("<strong>Save failed (MongoDB)</strong>" + escapeHtml(m), true);
+        }
+        alert("Could not save log: " + m);
       });
   });
 
@@ -2314,7 +2336,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
           "<strong>Storage unavailable</strong>This browser blocked local storage, so data cannot be kept after refresh. Use a normal (non-private) window or another browser.",
           true
         );
-      } else if (location.protocol === "file:") {
+      } else if (location.protocol === "file:" && !__netlifyProbeFailed) {
         showStorageBanner(
           "<strong>Tip: open from a website URL</strong>For the most reliable saving after refresh, use your GitHub Pages link or a local dev server — not a double-clicked file. Some browsers limit storage for <code>file://</code>."
         );
@@ -2325,9 +2347,11 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
 
   function tryMongoOrFallback() {
     if (mongoEnabled()) {
-      showStorageBanner(
-        "<strong>MongoDB Data API</strong>Leads and logs sync to Atlas. Your API key is visible in this file — restrict it in Atlas. Prefer Netlify + MONGODB_URL when possible."
-      );
+      if (!__netlifyProbeFailed) {
+        showStorageBanner(
+          "<strong>MongoDB Data API</strong>Leads and logs sync to Atlas. Your API key is visible in this file — restrict it in Atlas. Prefer Netlify + MONGODB_URL when possible."
+        );
+      }
       refreshFromMongo()
         .then(function () {
           finishInit();
@@ -2351,12 +2375,24 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       probeAndLoadNetlify()
         .then(function () {
           showStorageBanner(
-            "<strong>Netlify + MongoDB</strong>Data is stored in Atlas. Your URI is only in Netlify environment variables (<code>MONGODB_URL</code>), not in this page."
+            "<strong>Netlify + MongoDB</strong>Data is stored in Atlas. URI is only in Netlify → <code>MONGODB_URL</code> (redeploy after changing it)."
           );
           finishInit();
         })
-        .catch(function () {
+        .catch(function (err) {
           __netlifyOk = false;
+          __netlifyProbeFailed = true;
+          var msg = err && err.message ? String(err.message) : "Function unreachable";
+          if (msg !== "skip") {
+            showStorageBanner(
+              "<strong>Not saving to MongoDB yet</strong>" +
+                escapeHtml(msg) +
+                " — Until this works, data stays in the browser only. Fix: (1) Push <code>netlify/functions/outreach.js</code> + <code>package.json</code> and redeploy. (2) Netlify → Env → <code>MONGODB_URL</code> = full <code>mongodb+srv://…</code> from Atlas. (3) Atlas → Network Access → allow <code>0.0.0.0/0</code>. (4) Open <code>" +
+                escapeHtml(netlifyFnUrl() + "?c=leads") +
+                "</code> in a tab — you should see JSON, not an error page.",
+              true
+            );
+          }
           tryMongoOrFallback();
         });
       return;
