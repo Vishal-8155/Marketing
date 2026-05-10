@@ -370,26 +370,14 @@
       word-break: break-word;
     }
 
-    /* Cards & stats — minmax(0,1fr) prevents grid blowout past viewport */
+    /* Cards & stats — auto-fit wraps 2→5 columns; min(100%,…) keeps one column on very narrow widths */
     .stats {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr));
       gap: 12px;
       margin-bottom: 20px;
       min-width: 0;
       width: 100%;
-    }
-
-    @media (min-width: 640px) {
-      .stats {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .stats {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
     }
 
     .stat-card {
@@ -1093,6 +1081,11 @@
           <label>Calls booked</label>
           <div class="num" id="statBooked">0</div>
           <div class="sub">ready to talk</div>
+        </div>
+        <div class="stat-card">
+          <label>Daily message days</label>
+          <div class="num" id="statActivityDays">0</div>
+          <div class="sub">unique days logged</div>
         </div>
         <div class="stat-card">
           <label>Messages logged</label>
@@ -2149,6 +2142,15 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     }, 0);
   }
 
+  function countActivityUniqueDays() {
+    var seen = {};
+    loadActivity().forEach(function (entry) {
+      var d = entry && entry.date ? String(entry.date).trim() : "";
+      if (d) seen[d] = true;
+    });
+    return Object.keys(seen).length;
+  }
+
   function refreshDashboard() {
     var leads = loadLeads();
     var interested = leads.filter(function (l) {
@@ -2161,6 +2163,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     $("statTotalLeads").textContent = String(leads.length);
     $("statInterested").textContent = String(interested);
     $("statBooked").textContent = String(booked);
+    $("statActivityDays").textContent = String(countActivityUniqueDays());
     $("statMsgTotal").textContent = String(sumMessageLogs());
 
     var statusCounts = {};
