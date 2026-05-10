@@ -500,19 +500,31 @@
       font-size: 0.88rem;
     }
 
-    /* Tables */
+    /* Tables — always one row per record; overflow scrolls horizontally */
     .table-wrap {
+      width: 100%;
       overflow-x: auto;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
       margin: 0 -2px;
       border-radius: var(--radius-sm);
+      scrollbar-gutter: stable;
     }
 
     table.data-table {
-      width: 100%;
-      min-width: 720px;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
       font-size: 0.8rem;
+      table-layout: auto;
+    }
+
+    table.data-table.leads-table {
+      min-width: 1180px;
+    }
+
+    table.data-table.activity-table {
+      min-width: 1380px;
     }
 
     .data-table th,
@@ -520,7 +532,8 @@
       text-align: left;
       padding: 10px 12px;
       border-bottom: 1px solid var(--border);
-      vertical-align: top;
+      vertical-align: middle;
+      white-space: nowrap;
     }
 
     .data-table th {
@@ -530,12 +543,11 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      white-space: nowrap;
     }
 
     .data-table td {
       color: var(--text);
-      word-break: break-word;
+      max-width: none;
     }
 
     .data-table tbody tr:hover {
@@ -560,90 +572,11 @@
     .status-closed { background: #fee2e2; color: #991b1b; }
 
     .table-actions {
-      display: flex;
-      flex-wrap: wrap;
+      display: inline-flex;
+      flex-wrap: nowrap;
+      align-items: center;
       gap: 6px;
-    }
-
-    @media (max-width: 700px) {
-      table.data-table.leads-table {
-        min-width: 0;
-      }
-
-      .leads-table thead {
-        display: none;
-      }
-
-      .leads-table tr {
-        display: block;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        margin-bottom: 12px;
-        background: var(--surface);
-      }
-
-      .leads-table td {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 8px 12px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .leads-table td:last-child {
-        border-bottom: none;
-      }
-
-      .leads-table td::before {
-        content: attr(data-label);
-        font-size: 0.62rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        flex-shrink: 0;
-        max-width: 38%;
-      }
-    }
-
-    /* Activity table — wide columns scroll on tablet */
-    table.data-table.activity-table {
-      min-width: 600px;
-    }
-
-    @media (max-width: 640px) {
-      .activity-table thead {
-        display: none;
-      }
-
-      .activity-table tr {
-        display: block;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        margin-bottom: 12px;
-        background: var(--surface);
-      }
-
-      .activity-table td {
-        display: block;
-        padding: 8px 12px;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.78rem;
-      }
-
-      .activity-table td:last-child {
-        border-bottom: none;
-      }
-
-      .activity-table td::before {
-        display: block;
-        font-size: 0.62rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        margin-bottom: 4px;
-        content: attr(data-label);
-      }
+      white-space: nowrap;
     }
 
     /* Social rows in form */
@@ -843,8 +776,8 @@
     }
 
     table.schedule {
-      width: 100%;
-      min-width: 280px;
+      width: max-content;
+      min-width: 520px;
       border-collapse: collapse;
       font-size: 0.82rem;
     }
@@ -854,6 +787,8 @@
       padding: 10px 12px;
       border-bottom: 1px solid var(--border);
       text-align: left;
+      white-space: nowrap;
+      vertical-align: middle;
     }
 
     .schedule th {
@@ -861,41 +796,6 @@
       font-size: 0.65rem;
       text-transform: uppercase;
       color: var(--text-muted);
-    }
-
-    @media (max-width: 560px) {
-      .schedule thead {
-        display: none;
-      }
-
-      .schedule tr {
-        display: block;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        margin-bottom: 10px;
-        background: var(--surface);
-      }
-
-      .schedule td {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        padding: 8px 12px;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .schedule td:last-child {
-        border-bottom: none;
-      }
-
-      .schedule td::before {
-        content: attr(data-label);
-        font-size: 0.62rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        max-width: 42%;
-      }
     }
 
     .power-move {
@@ -936,6 +836,28 @@
       clip: rect(0, 0, 0, 0);
       border: 0;
     }
+
+    .storage-banner {
+      display: none;
+      margin: 0 clamp(12px, 3vw, 28px) 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 0.8rem;
+      line-height: 1.45;
+      border: 1px solid #fcd34d;
+    }
+
+    .storage-banner.visible {
+      display: block;
+    }
+
+    .storage-banner strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.82rem;
+    }
   </style>
 </head>
 <body>
@@ -967,6 +889,8 @@
       </div>
       <span class="header-pill" id="headerPill">Overview</span>
     </header>
+
+    <div class="storage-banner" id="storageBanner" role="status" aria-live="polite"></div>
 
     <!-- Dashboard -->
     <section class="view active wrap" id="view-dashboard" aria-labelledby="dash-heading">
@@ -1306,14 +1230,16 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         <p style="margin-top:10px;">Ship something small your niche can use; distribute everywhere.</p>
       </div>
 
-      <p class="footer-note">Data stays in this browser (local storage) until you clear site data.</p>
+      <p class="footer-note">Leads and message logs are saved automatically in this browser and stay after refresh. Avoid private/incognito mode, and open the site from the same URL (e.g. your GitHub Pages link). Clearing site data will remove them.</p>
     </section>
   </div>
 
   <script>
 (function () {
   var STORAGE_LEADS = "outreachLeads_v1";
+  var STORAGE_LEADS_BAK = "outreachLeads_v1_bak";
   var STORAGE_ACTIVITY = "outreachActivity_v1";
+  var STORAGE_ACTIVITY_BAK = "outreachActivity_v1_bak";
 
   var chartStatus = null;
   var chartActivity = null;
@@ -1322,30 +1248,109 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return document.getElementById(id);
   }
 
-  function loadLeads() {
+  function canUseLocalStorage() {
     try {
-      var raw = localStorage.getItem(STORAGE_LEADS);
-      return raw ? JSON.parse(raw) : [];
+      var k = "__outreach_storage_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return true;
     } catch (e) {
-      return [];
+      return false;
     }
   }
 
+  function parseJsonArray(raw) {
+    if (raw == null || raw === "") return null;
+    var data = JSON.parse(raw);
+    return Array.isArray(data) ? data : null;
+  }
+
+  function loadLeads() {
+    try {
+      var primary = localStorage.getItem(STORAGE_LEADS);
+      var parsed = parseJsonArray(primary);
+      if (parsed) return parsed;
+    } catch (e) {}
+    try {
+      var bak = localStorage.getItem(STORAGE_LEADS_BAK);
+      var recovered = parseJsonArray(bak);
+      if (recovered) {
+        try {
+          localStorage.setItem(STORAGE_LEADS, bak);
+        } catch (e2) {}
+        return recovered;
+      }
+    } catch (e3) {}
+    return [];
+  }
+
   function saveLeads(arr) {
-    localStorage.setItem(STORAGE_LEADS, JSON.stringify(arr));
+    var json = JSON.stringify(arr);
+    try {
+      localStorage.setItem(STORAGE_LEADS, json);
+      localStorage.setItem(STORAGE_LEADS_BAK, json);
+    } catch (e) {
+      console.warn("saveLeads failed", e);
+      showStorageBanner(
+        "<strong>Could not save leads</strong>Storage may be full or blocked (private window, strict settings). Try another browser or turn off private mode.",
+        true
+      );
+    }
   }
 
   function loadActivity() {
     try {
-      var raw = localStorage.getItem(STORAGE_ACTIVITY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) {
-      return [];
-    }
+      var primary = localStorage.getItem(STORAGE_ACTIVITY);
+      var parsed = parseJsonArray(primary);
+      if (parsed) return parsed;
+    } catch (e) {}
+    try {
+      var bak = localStorage.getItem(STORAGE_ACTIVITY_BAK);
+      var recovered = parseJsonArray(bak);
+      if (recovered) {
+        try {
+          localStorage.setItem(STORAGE_ACTIVITY, bak);
+        } catch (e2) {}
+        return recovered;
+      }
+    } catch (e3) {}
+    return [];
   }
 
   function saveActivity(arr) {
-    localStorage.setItem(STORAGE_ACTIVITY, JSON.stringify(arr));
+    var json = JSON.stringify(arr);
+    try {
+      localStorage.setItem(STORAGE_ACTIVITY, json);
+      localStorage.setItem(STORAGE_ACTIVITY_BAK, json);
+    } catch (e) {
+      console.warn("saveActivity failed", e);
+      showStorageBanner(
+        "<strong>Could not save message log</strong>Storage may be full or blocked. Check private mode or free disk space.",
+        true
+      );
+    }
+  }
+
+  function showStorageBanner(html, isError) {
+    var el = $("storageBanner");
+    if (!el) return;
+    el.innerHTML = html;
+    el.classList.add("visible");
+    if (isError) {
+      el.style.background = "#fee2e2";
+      el.style.color = "#991b1b";
+      el.style.borderColor = "#fca5a5";
+    } else {
+      el.style.background = "";
+      el.style.color = "";
+      el.style.borderColor = "";
+    }
+  }
+
+  function reloadAllFromStorage() {
+    renderLeads();
+    renderActivity();
+    refreshDashboard();
   }
 
   function onlyDigits(str) {
@@ -2008,7 +2013,36 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     document.body.removeChild(ta);
   }
 
+  window.addEventListener("storage", function (e) {
+    if (!e.key) return;
+    if (
+      e.key === STORAGE_LEADS ||
+      e.key === STORAGE_LEADS_BAK ||
+      e.key === STORAGE_ACTIVITY ||
+      e.key === STORAGE_ACTIVITY_BAK
+    ) {
+      reloadAllFromStorage();
+    }
+  });
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible") {
+      reloadAllFromStorage();
+    }
+  });
+
   /* Init */
+  if (!canUseLocalStorage()) {
+    showStorageBanner(
+      "<strong>Storage unavailable</strong>This browser blocked local storage, so data cannot be kept after refresh. Use a normal (non-private) window or another browser.",
+      true
+    );
+  } else if (location.protocol === "file:") {
+    showStorageBanner(
+      "<strong>Tip: open from a website URL</strong>For the most reliable saving after refresh, use your GitHub Pages link or a local dev server — not a double-clicked file. Some browsers limit storage for <code>file://</code>."
+    );
+  }
+
   setActivityDateMin();
   renderLeads();
   renderActivity();
