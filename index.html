@@ -502,6 +502,19 @@
       margin-bottom: 10px;
     }
 
+    /* Vertical rhythm helpers (tighter on small screens via mobile block below) */
+    .mt-flow {
+      margin-top: 16px;
+    }
+
+    .mt-flow-sm {
+      margin-top: 12px;
+    }
+
+    .mt-flow-xs {
+      margin-top: 10px;
+    }
+
     /* Forms */
     .form-grid {
       display: grid;
@@ -565,6 +578,10 @@
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 8px;
+    }
+
+    .form-actions.mt-flow {
+      margin-top: 16px;
     }
 
     .btn {
@@ -1072,6 +1089,282 @@
       margin-bottom: 4px;
       font-size: 0.82rem;
     }
+
+    /* —— Compact mobile: forms & pages (avoid “desktop spacing” on narrow screens) —— */
+    @media (max-width: 639px) {
+      .wrap {
+        padding-top: 12px;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px));
+        padding-right: calc(10px + env(safe-area-inset-right, 0px));
+      }
+
+      .page-head {
+        margin-bottom: 14px;
+      }
+
+      .page-head h2 {
+        font-size: 1.2rem;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+      }
+
+      .page-head p {
+        font-size: 0.8125rem;
+        line-height: 1.45;
+      }
+
+      .card {
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        border-radius: 12px;
+      }
+
+      .card-head {
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .card-head h3 {
+        font-size: 0.95rem;
+      }
+
+      .form-grid {
+        gap: 10px;
+      }
+
+      .field label {
+        font-size: 0.6875rem;
+        margin-bottom: 4px;
+        letter-spacing: 0.02em;
+      }
+
+      .field input,
+      .field select,
+      .field textarea {
+        padding: 8px 10px;
+        border-radius: 10px;
+      }
+
+      .field textarea {
+        min-height: 64px;
+      }
+
+      .form-actions {
+        margin-top: 4px;
+        gap: 8px;
+      }
+
+      .btn {
+        font-size: 0.8125rem;
+        padding: 9px 14px;
+        min-height: 44px;
+      }
+
+      .btn-sm {
+        min-height: 38px;
+        padding: 6px 10px;
+        font-size: 0.74rem;
+      }
+
+      .section-label {
+        font-size: 0.62rem;
+        margin-bottom: 8px;
+      }
+
+      .social-grid {
+        gap: 8px;
+      }
+
+      .social-field label {
+        font-size: 0.65rem;
+      }
+
+      .social-field input {
+        padding: 7px 9px;
+      }
+
+      .custom-social-row {
+        margin-top: 6px;
+        gap: 6px;
+      }
+
+      .custom-social-row input[type="text"] {
+        padding: 7px 9px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 8px 9px;
+      }
+
+      .data-table td {
+        font-size: 0.75rem;
+      }
+
+      .data-table th {
+        font-size: 0.58rem;
+      }
+
+      .status-pill {
+        font-size: 0.58rem;
+        padding: 3px 6px;
+      }
+
+      .empty-hint {
+        padding: 14px 10px;
+        font-size: 0.8125rem;
+      }
+
+      .chart-grid {
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .chart-card {
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+
+      .chart-card h4 {
+        margin-bottom: 8px;
+      }
+
+      .chart-box {
+        height: min(200px, 48vw);
+        min-height: 180px;
+      }
+
+      .stats {
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .stat-card {
+        padding: 10px 12px;
+        border-radius: 12px;
+      }
+
+      .stat-card label {
+        font-size: 0.58rem;
+        margin-bottom: 4px;
+      }
+
+      .stat-card .sub {
+        font-size: 0.62rem;
+      }
+
+      .goal-banner {
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        border-radius: 12px;
+      }
+
+      .goal-banner strong {
+        font-size: 0.95rem;
+      }
+
+      .goal-banner p {
+        font-size: 0.8125rem;
+        margin-top: 4px;
+      }
+
+      .platform-grid {
+        gap: 10px;
+      }
+
+      .platform-card p,
+      .platform-card ul {
+        font-size: 0.8125rem;
+      }
+
+      .template-body {
+        padding: 10px 12px;
+        font-size: 0.8125rem;
+      }
+
+      .template-actions {
+        gap: 8px;
+      }
+
+      .metric-row {
+        margin: 8px 0;
+        padding-bottom: 8px;
+        gap: 6px 10px;
+      }
+
+      .code-block {
+        padding: 8px 10px;
+        font-size: 0.62rem;
+      }
+
+      table.schedule {
+        font-size: 0.78rem;
+      }
+
+      .schedule th,
+      .schedule td {
+        padding: 8px 9px;
+      }
+
+      .power-move h3 {
+        font-size: 1rem;
+      }
+
+      .power-move p,
+      .power-move li {
+        font-size: 0.8125rem;
+      }
+
+      .footer-note {
+        margin-top: 20px;
+        font-size: 0.72rem;
+      }
+
+      .storage-banner {
+        margin-left: calc(10px + env(safe-area-inset-left, 0px));
+        margin-right: calc(10px + env(safe-area-inset-right, 0px));
+        margin-bottom: 10px;
+        padding: 8px 11px;
+        font-size: 0.78rem;
+      }
+
+      .storage-banner strong {
+        font-size: 0.78rem;
+      }
+
+      .sidebar-brand {
+        padding: 0 16px 14px;
+      }
+
+      .sidebar-brand strong {
+        font-size: 0.92rem;
+      }
+
+      .sidebar-brand span {
+        font-size: 0.7rem;
+      }
+
+      .nav-link {
+        font-size: 0.85rem;
+        padding: 10px 16px;
+      }
+
+      .mt-flow {
+        margin-top: 10px;
+      }
+
+      .mt-flow-sm {
+        margin-top: 8px;
+      }
+
+      .mt-flow-xs {
+        margin-top: 8px;
+      }
+
+      .form-actions.mt-flow {
+        margin-top: 10px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1206,7 +1499,7 @@
             </div>
             <div class="field" style="grid-column: 1 / -1;">
               <label for="leadWant">What they want</label>
-              <textarea id="leadWant" placeholder="e.g. AI automation for inventory, landing page, etc."></textarea>
+              <textarea id="leadWant" placeholder="e.g. AI automation, landing page…"></textarea>
             </div>
             <div class="field" style="grid-column: 1 / -1;">
               <label for="leadUrl">Portfolio / profile URL</label>
@@ -1282,7 +1575,7 @@
             </div>
           </div>
 
-          <p class="section-label" style="margin-top:16px;">Social &amp; channels (message count)</p>
+          <p class="section-label mt-flow">Social &amp; channels (message count)</p>
           <div class="social-grid" id="socialGrid">
             <div class="social-field">
               <label for="soc_linkedin">LinkedIn</label>
@@ -1315,9 +1608,9 @@
           </div>
 
           <div id="customSocialMount"></div>
-          <button type="button" class="btn btn-outline btn-sm" id="addCustomSocial" style="margin-top:12px;">+ Add platform</button>
+          <button type="button" class="btn btn-outline btn-sm mt-flow-sm" id="addCustomSocial">+ Add platform</button>
 
-          <div class="form-actions" style="margin-top:16px;">
+          <div class="form-actions mt-flow">
             <button type="submit" class="btn btn-primary" id="activitySubmitBtn">Save log</button>
             <button type="button" class="btn btn-ghost" id="activityCancelEdit" style="display:none;">Cancel edit</button>
           </div>
@@ -1379,11 +1672,11 @@
           <div class="card-head"><h3>LinkedIn</h3><div class="badges"><span class="badge accent">Premium</span><span class="badge">B2B</span></div></div>
           <div class="metric-row"><span style="font-size:0.65rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Focus</span><span style="font-size:1.4rem;font-weight:700;">20–30</span><span style="font-size:0.85rem;color:var(--text-muted);font-weight:600;">comments / day</span></div>
           <p><strong>Don’t blast DMs.</strong> Comment with insight; connect 10–15; message after accept.</p>
-          <p class="section-label" style="margin-top:12px;">LinkedIn search</p>
+          <p class="section-label mt-flow-sm">LinkedIn search</p>
           <div class="code-block" id="linkedinSearch">(CEO OR Founder OR "Managing Director") AND 
 (healthcare OR ecommerce OR sports) AND 
 ("11-50 employees" OR "small team")</div>
-          <button type="button" class="btn btn-ghost" style="margin-top:10px;" onclick="copyText('linkedinSearch', this)">Copy search string</button>
+          <button type="button" class="btn btn-ghost mt-flow-xs" onclick="copyText('linkedinSearch', this)">Copy search string</button>
         </article>
         <article class="card platform-card">
           <div class="card-head"><h3>Twitter / X</h3><div class="badges"><span class="badge">DMs</span></div></div>
@@ -1446,7 +1739,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       <div class="card power-move">
         <p class="section-label" style="color:rgba(255,255,255,0.6);">Power move</p>
         <h3>One mini-tool → Product Hunt, Reddit, LinkedIn, Indie Hackers</h3>
-        <p style="margin-top:10px;">Ship something small your niche can use; distribute everywhere.</p>
+        <p class="mt-flow-xs">Ship something small your niche can use; distribute everywhere.</p>
       </div>
 
       <p class="footer-note">On Netlify with <code>MONGODB_URL</code> set, data is stored in MongoDB. Otherwise it uses this browser (local storage). Avoid private mode if you rely on local storage.</p>
