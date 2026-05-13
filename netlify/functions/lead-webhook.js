@@ -50,21 +50,26 @@ exports.handler = async function (event) {
     };
   }
 
-  var body = JSON.stringify({
-    name: incoming.name != null ? String(incoming.name) : "",
-    email: incoming.email != null ? String(incoming.email) : "",
-    mobile: incoming.mobile != null ? String(incoming.mobile) : "",
-    company: incoming.company != null ? String(incoming.company) : "",
-    website: incoming.website != null ? String(incoming.website) : "",
-    linkedin_url: incoming.linkedin_url != null ? String(incoming.linkedin_url) : "",
-    status: incoming.status != null ? String(incoming.status) : ""
-  });
+  var outbound = {
+    name: incoming.name != null ? String(incoming.name).trim() : "",
+    email: incoming.email != null ? String(incoming.email).trim() : "",
+    mobile: String(incoming.mobile != null ? incoming.mobile : "").replace(/\D/g, ""),
+    company: incoming.company != null ? String(incoming.company).trim() : "",
+    website: incoming.website != null ? String(incoming.website).trim() : "",
+    linkedin_url: incoming.linkedin_url != null ? String(incoming.linkedin_url).trim() : "",
+    status: incoming.status != null ? String(incoming.status).trim() : ""
+  };
+
+  var body = JSON.stringify(outbound);
 
   var res;
   try {
     res = await fetch(webhookUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Accept: "application/json"
+      },
       body: body
     });
   } catch (err) {

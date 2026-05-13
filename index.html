@@ -1911,12 +1911,26 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     }
   }
 
+  /** Same field names / JSON shape sent to WEBHOOK_URL via /.netlify/functions/lead-webhook */
+  function buildLeadWebhookJsonPayload(lead) {
+    return {
+      name: String(lead.name != null ? lead.name : "").trim(),
+      email: String(lead.email != null ? lead.email : "").trim(),
+      mobile: String(lead.mobile != null ? lead.mobile : "").replace(/\D/g, ""),
+      company: String(lead.company != null ? lead.company : "").trim(),
+      website: String(lead.website != null ? lead.website : "").trim(),
+      linkedin_url: String(lead.linkedin_url != null ? lead.linkedin_url : "").trim(),
+      status: String(lead.status != null ? lead.status : "").trim()
+    };
+  }
+
   function postLeadWebhook(payload) {
+    var json = JSON.stringify(buildLeadWebhookJsonPayload(payload));
     return fetch(leadWebhookFnUrl(), {
       method: "POST",
       credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: json
     }).then(function (r) {
       return r.text().then(function (text) {
         var data = {};
@@ -2768,15 +2782,6 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       linkedin_url: $("leadLinkedin").value.trim(),
       status: $("leadStatus").value.trim()
     };
-    var webhookBody = {
-      name: payload.name,
-      email: payload.email,
-      mobile: payload.mobile,
-      company: payload.company,
-      website: payload.website,
-      linkedin_url: payload.linkedin_url,
-      status: payload.status
-    };
     if (!payload.name || !payload.email || !payload.company) {
       alert("Name, email, and company are required.");
       return;
@@ -2791,7 +2796,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     }
     saveLeads(leads).then(
       function () {
-        return postLeadWebhook(webhookBody).catch(function (whErr) {
+        return postLeadWebhook(payload).catch(function (whErr) {
           var wm = whErr && whErr.message ? whErr.message : String(whErr);
           alert(
             "Lead was saved, but the webhook step failed:\n" +
