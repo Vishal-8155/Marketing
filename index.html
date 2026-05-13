@@ -1482,7 +1482,7 @@
     <section class="view wrap" id="view-leads" aria-labelledby="leads-heading">
       <div class="page-head">
         <h2 id="leads-heading">Responded leads</h2>
-        <p>When someone gives you a genuine reply, add them here — name, company, what they need, and links.</p>
+        <p>When someone gives you a genuine reply, add them here — contact details, company, website, and LinkedIn.</p>
       </div>
 
       <div class="card">
@@ -1498,7 +1498,7 @@
             </div>
             <div class="field">
               <label for="leadEmail">Email</label>
-              <input type="email" id="leadEmail" autocomplete="email" />
+              <input type="email" id="leadEmail" required autocomplete="email" />
             </div>
             <div class="field">
               <label for="leadMobile">Mobile</label>
@@ -1506,30 +1506,25 @@
             </div>
             <div class="field">
               <label for="leadCompany">Company</label>
-              <input type="text" id="leadCompany" autocomplete="organization" />
+              <input type="text" id="leadCompany" required autocomplete="organization" />
             </div>
             <div class="field">
-              <label for="leadPosition">Position</label>
-              <input type="text" id="leadPosition" autocomplete="organization-title" />
+              <label for="leadWebsite">Website</label>
+              <input type="text" id="leadWebsite" placeholder="https://..." autocomplete="url" />
             </div>
             <div class="field">
+              <label for="leadLinkedin">LinkedIn URL</label>
+              <input type="text" id="leadLinkedin" placeholder="https://linkedin.com/in/..." autocomplete="url" />
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
               <label for="leadStatus">Status</label>
-              <select id="leadStatus">
-                <option value="New">New</option>
-                <option value="Responded">Responded</option>
-                <option value="Interested">Interested</option>
-                <option value="Call booked">Call booked</option>
-                <option value="Not now">Not now</option>
-                <option value="Closed">Closed</option>
-              </select>
-            </div>
-            <div class="field" style="grid-column: 1 / -1;">
-              <label for="leadWant">What they want</label>
-              <textarea id="leadWant" placeholder="e.g. AI automation, landing page…"></textarea>
-            </div>
-            <div class="field" style="grid-column: 1 / -1;">
-              <label for="leadUrl">Portfolio / profile URL</label>
-              <input type="url" id="leadUrl" placeholder="https://..." />
+              <input
+                type="text"
+                id="leadStatus"
+                value="New"
+                placeholder="e.g. New, Interested, Call booked"
+                autocomplete="off"
+              />
             </div>
           </div>
           <div class="form-actions">
@@ -1551,10 +1546,9 @@
                 <th>Email</th>
                 <th>Mobile</th>
                 <th>Company</th>
-                <th>Position</th>
-                <th>What they want</th>
+                <th>Website</th>
+                <th>LinkedIn</th>
                 <th>Status</th>
-                <th>URL</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1779,6 +1773,9 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
    *    Netlify to your Atlas connection string. The browser calls /.netlify/functions/outreach —
    *    the URI never appears in HTML or in the client.
    *
+   *    Lead form webhook: set WEBHOOK_URL in Netlify (or .env for netlify dev). The browser posts
+   *    JSON to /.netlify/functions/lead-webhook, which forwards the same body to WEBHOOK_URL.
+   *
    * 2) Atlas Data API: set MONGO.enabled and apiKey/endpoint below (key is visible in source).
    *
    * NEVER paste mongodb+srv://… into this file.
@@ -1905,6 +1902,42 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     } catch (e) {
       return NETLIFY_DB.path;
     }
+  }
+
+  function leadWebhookFnUrl() {
+    try {
+      return new URL("/.netlify/functions/lead-webhook", window.location.origin).href;
+    } catch (e) {
+      return "/.netlify/functions/lead-webhook";
+    }
+  }
+
+  function postLeadWebhook(payload) {
+    return fetch(leadWebhookFnUrl(), {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    }).then(function (r) {
+      return r.text().then(function (text) {
+        var data = {};
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (e2) {
+            if (!r.ok) {
+              throw new Error(text.slice(0, 200) || r.statusText);
+            }
+          }
+        }
+        if (!r.ok) {
+          var parts = [data.error, data.hint, data.detail].filter(Boolean);
+          var msg = parts.join(" ").trim() || text || r.statusText;
+          throw new Error(msg || String(r.status));
+        }
+        return data;
+      });
+    });
   }
 
   function netlifyParseResponse(r) {
@@ -2277,6 +2310,16 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     return parts.length ? parts.join("; ") : "—";
   }
 
+  function leadLinkCell(url) {
+    var u = String(url == null ? "" : url).trim();
+    if (!u) return "—";
+    return (
+      '<a href="' +
+      escapeAttr(u) +
+      '" target="_blank" rel="noopener">Link</a>'
+    );
+  }
+
   function renderLeads() {
     var leads = loadLeads();
     var tbody = $("leadTableBody");
@@ -2299,24 +2342,17 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
         '<td data-label="Company">' +
         escapeHtml(lead.company || "—") +
         "</td>" +
-        '<td data-label="Position">' +
-        escapeHtml(lead.position || "—") +
+        '<td data-label="Website">' +
+        leadLinkCell(lead.website || lead.url) +
         "</td>" +
-        '<td data-label="Want">' +
-        escapeHtml(lead.want || "—") +
+        '<td data-label="LinkedIn">' +
+        leadLinkCell(lead.linkedin_url) +
         "</td>" +
         '<td data-label="Status"><span class="status-pill ' +
         statusClass(lead.status) +
         '">' +
         escapeHtml(lead.status || "") +
         "</span></td>" +
-        '<td data-label="URL">' +
-        (lead.url
-          ? '<a href="' +
-            escapeAttr(lead.url) +
-            '" target="_blank" rel="noopener">Link</a>'
-          : "—") +
-        "</td>" +
         '<td data-label="Actions"><div class="table-actions">' +
         '<button type="button" class="btn btn-outline btn-sm" data-id="' +
         escapeAttr(lead.id) +
@@ -2366,10 +2402,9 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     $("leadEmail").value = lead.email || "";
     $("leadMobile").value = lead.mobile || "";
     $("leadCompany").value = lead.company || "";
-    $("leadPosition").value = lead.position || "";
-    $("leadWant").value = lead.want || "";
+    $("leadWebsite").value = lead.website || lead.url || "";
+    $("leadLinkedin").value = lead.linkedin_url || "";
     $("leadStatus").value = lead.status || "New";
-    $("leadUrl").value = lead.url || "";
     $("leadFormTitle").textContent = "Edit lead";
     $("leadSubmitBtn").textContent = "Update lead";
     $("leadCancelEdit").style.display = "";
@@ -2717,6 +2752,11 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
   /* Lead form */
   $("leadForm").addEventListener("submit", function (e) {
     e.preventDefault();
+    var form = $("leadForm");
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
     var leads = loadLeads();
     var id = $("leadEditId").value;
     var payload = {
@@ -2725,12 +2765,23 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
       email: $("leadEmail").value.trim(),
       mobile: onlyDigits($("leadMobile").value),
       company: $("leadCompany").value.trim(),
-      position: $("leadPosition").value.trim(),
-      want: $("leadWant").value.trim(),
-      status: $("leadStatus").value,
-      url: $("leadUrl").value.trim()
+      website: $("leadWebsite").value.trim(),
+      linkedin_url: $("leadLinkedin").value.trim(),
+      status: $("leadStatus").value.trim()
     };
-    if (!payload.name) return;
+    var webhookBody = {
+      name: payload.name,
+      email: payload.email,
+      mobile: payload.mobile,
+      company: payload.company,
+      website: payload.website,
+      linkedin_url: payload.linkedin_url,
+      status: payload.status
+    };
+    if (!payload.name || !payload.email || !payload.company) {
+      alert("Name, email, and company are required.");
+      return;
+    }
 
     if (id) {
       leads = leads.map(function (l) {
@@ -2739,19 +2790,30 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     } else {
       leads.push(payload);
     }
-    saveLeads(leads)
-      .then(function () {
-        resetLeadForm();
-        renderLeads();
-        refreshDashboard();
-      })
-      .catch(function (err) {
-        var m = err && err.message ? err.message : String(err);
+    saveLeads(leads).then(
+      function () {
+        return postLeadWebhook(webhookBody).catch(function (whErr) {
+          var wm = whErr && whErr.message ? whErr.message : String(whErr);
+          alert(
+            "Lead was saved, but the webhook step failed:\n" +
+              wm +
+              "\n\nAdd WEBHOOK_URL to Netlify (Site → Environment variables) or to .env for `netlify dev`, deploy the `lead-webhook` function, and restart the dev server."
+          );
+        });
+      },
+      function (saveErr) {
+        var sm = saveErr && saveErr.message ? saveErr.message : String(saveErr);
         if (netlifyDbActive()) {
-          showStorageBanner("<strong>Save failed (MongoDB)</strong>" + escapeHtml(m), true);
+          showStorageBanner("<strong>Save failed (MongoDB)</strong>" + escapeHtml(sm), true);
         }
-        alert("Could not save lead: " + m);
-      });
+        alert("Could not save lead: " + sm);
+        return Promise.reject(saveErr);
+      }
+    ).then(function () {
+      resetLeadForm();
+      renderLeads();
+      refreshDashboard();
+    });
   });
 
   $("leadCancelEdit").addEventListener("click", resetLeadForm);

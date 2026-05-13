@@ -2,7 +2,13 @@
   "name": "outreach-marketing",
   "private": true,
   "description": "Static site + Netlify Function for MongoDB",
+  "scripts": {
+    "dev": "netlify dev"
+  },
   "dependencies": {
     "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^20.0.0"
   }
 }
