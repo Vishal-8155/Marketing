@@ -1521,7 +1521,6 @@
               <input
                 type="text"
                 id="leadStatus"
-                value="New"
                 placeholder="e.g. New, Interested, Call booked"
                 autocomplete="off"
               />
@@ -2404,7 +2403,7 @@ Would you be open to a free 15-min call? No pitch — just want to understand yo
     $("leadCompany").value = lead.company || "";
     $("leadWebsite").value = lead.website || lead.url || "";
     $("leadLinkedin").value = lead.linkedin_url || "";
-    $("leadStatus").value = lead.status || "New";
+    $("leadStatus").value = lead.status || "";
     $("leadFormTitle").textContent = "Edit lead";
     $("leadSubmitBtn").textContent = "Update lead";
     $("leadCancelEdit").style.display = "";
